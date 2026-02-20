@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Central Correios | AMOLED 3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- CONFIGURAÇÃO BASE --- */
+        body { 
+            /* Degradê azul escuro no topo dissolvendo para o preto absoluto */
+            background: linear-gradient(180deg, #00152e 0%, #000000 50%);
+            background-attachment: fixed; /* Mantém o fundo fixo caso haja rolagem */
+            background-color: #000000; 
+            color: #ffffff; 
+            overflow-x: hidden; 
+            min-height: 100vh;
+        }
+        html { background-color: #000000; }
+        * { -webkit-tap-highlight-color: transparent; }
+
+        /* --- ANIMAÇÕES DE ENTRADA --- */
+        @keyframes fadeInUp3D {
+            from { opacity: 0; transform: translateY(40px) scale(0.95) rotateX(-10deg); }
+            to { opacity: 1; transform: translateY(0) scale(1) rotateX(0); }
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-150%); }
+            100% { transform: translateX(150%); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(234, 179, 8, 0.4)); }
+            50% { transform: scale(1.05) translateY(-3px); filter: drop-shadow(0 20px 25px rgba(234, 179, 8, 0.7)); }
+        }
+        
+        /* Nova Animação de Flutuação para o Card do Splash */
+        @keyframes floating {
+            0% { transform: translateY(0px); box-shadow: 0 15px 25px rgba(0,0,0,0.9); }
+            50% { transform: translateY(-12px); box-shadow: 0 25px 35px rgba(0,0,0,0.95); }
+            100% { transform: translateY(0px); box-shadow: 0 15px 25px rgba(0,0,0,0.9); }
+        }
+
+        .animate-enter { 
+            animation: fadeInUp3D 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; 
+            opacity: 0; 
+            transform-origin: center bottom;
+        }
+        
+        .animate-float {
+            animation: floating 4s ease-in-out infinite;
+        }
+
+        /* --- SISTEMA 3D E BORDAS LUMINOSAS --- */
+        
+        /* Header Fixo com Base 3D */
+        .header-3d { 
+            background: linear-gradient(180deg, #071520 0%, #000000 100%);
+            box-shadow: 
+                0 10px 25px rgba(0,0,0,0.95), 
+                inset 0 -2px 5px rgba(0,0,0,0.8),
+                inset 0 1px 1px rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+
+        /* Base física dos Cards */
+        .card-3d {
+            background: linear-gradient(145deg, #111111, #050505);
+            border-radius: 1.5rem;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            /* A espessura do botão em repouso */
+            box-shadow: 
+                0 6px 0 #000000, /* Espessura inferior física */
+                0 15px 20px rgba(0,0,0,0.9), /* Sombra projetada */
+                inset 1px 0 1px rgba(255, 255, 255, 0.03), /* Luz lateral */
+                inset -1px 0 1px rgba(0,0,0,0.5); /* Sombra lateral */
+        }
+
+        /* O Toque Mágico: Bordas Superiores Luminosas */
+        .luminous-edge-blue {
+            border-top: 1px solid rgba(59, 130, 246, 0.8);
+            box-shadow: inset 0 2px 6px rgba(59, 130, 246, 0.3), 0 6px 0 #000000, 0 15px 20px rgba(0,0,0,0.9);
+        }
+        .luminous-edge-yellow {
+            border-top: 3px solid rgba(234, 179, 8, 0.8);
+            box-shadow: inset 0 2px 6px rgba(234, 179, 8, 0.25), 0 6px 0 #000000, 0 15px 20px rgba(0,0,0,0.9);
+        }
+        .luminous-edge-green {
+            border-top: 3px solid rgba(34, 197, 94, 0.8);
+            box-shadow: inset 0 2px 6px rgba(34, 197, 94, 0.25), 0 6px 0 #000000, 0 15px 20px rgba(0,0,0,0.9);
+        }
+        .luminous-edge-purple {
+            border-top: 3px solid rgba(168, 85, 247, 0.8);
+            box-shadow: inset 0 2px 6px rgba(168, 85, 247, 0.3), 0 6px 0 #000000, 0 15px 20px rgba(0,0,0,0.9);
+        }
+        .luminous-edge-red {
+            border-top: 3px solid rgba(239, 68, 68, 0.8);
+            box-shadow: inset 0 2px 6px rgba(239, 68, 68, 0.3), 0 6px 0 #000000, 0 15px 20px rgba(0,0,0,0.9);
+        }
+        .luminous-edge-gray {
+            border-top: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.05), 0 6px 0 #000000, 0 15px 20px rgba(0,0,0,0.9);
+        }
+
+        /* Interação Tátil: O dedo afundando o botão */
+        .card-3d:active, .btn-icon-3d:active, .btn-circle-3d:active {
+            transform: translateY(6px) scale(0.97); /* Desce e encolhe levemente */
+            box-shadow: 
+                0 0px 0 #000000, /* Zera a espessura inferior */
+                0 2px 5px rgba(0,0,0,0.9), /* Sombra fica rente ao chão */
+                inset 0 3px 8px rgba(0, 0, 0, 0.9), /* Escurece por dentro no topo */
+                inset 0 1px 2px rgba(0, 0, 0, 0.8);
+            border-top-color: rgba(255,255,255,0.05); /* Apaga a luz da borda ao apertar */
+        }
+
+        /* Ícones Base (Quadradinhos internos) */
+        .btn-icon-3d {
+            background: linear-gradient(135deg, #1f1f1f 0%, #0a0a0a 100%);
+            border-radius: 1rem;
+            box-shadow: 
+                0 4px 0 #000000,
+                0 5px 10px rgba(0,0,0,0.8),
+                inset 0 1px 1px rgba(255,255,255,0.15);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Botões Circulares */
+        .btn-circle-3d {
+            background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+            border-radius: 50%;
+            box-shadow: 
+                0 4px 0 #000000,
+                0 5px 10px rgba(0,0,0,0.8),
+                inset 0 1px 1px rgba(255,255,255,0.15);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Efeito 3D nos Ícones do FontAwesome (Alto Relevo Físico) */
+        .icon-3d {
+            text-shadow: 
+                -1px -1px 1px rgba(255, 255, 255, 0.35), /* Luz de quina (brilho no relevo) */
+                1px 1px 1px rgba(0, 0, 0, 0.8),          /* Profundidade interna do chanfro */
+                3px 5px 5px rgba(0, 0, 0, 0.8);          /* Sombra projetada descolando o ícone do fundo */
+            transform: translateZ(10px);
+        }
+
+        /* Transição Suave entre Telas */
+        .screen-container {
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+        .screen-hidden {
+            opacity: 0;
+            transform: scale(0.92) translateY(20px);
+            pointer-events: none;
+            visibility: hidden;
+        }
+        .screen-visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        /* Splash Screen - Fundo Transparente para usar o fundo da página (Azul para Preto) */
+        #splash-screen {
+            position: fixed; inset: 0; background: transparent;
+            z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s ease-out, visibility 1s;
+        }
+        .loading-bar { width: 150px; height: 4px; background: #0a0a0a; border-radius: 10px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); position: relative; overflow: hidden; }
+        .loading-bar::after { content: ''; position: absolute; inset: 0; width: 60%; background: linear-gradient(90deg, transparent, #EAB308, transparent); animation: shimmer 1.2s infinite; }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-yellow-500 selection:text-black">
+
+    <div id="splash-screen">
+        <div class="card-3d luminous-edge-blue p-8 flex flex-col items-center justify-center animate-float w-11/12 max-w-sm" id="splash-card">
+            <div class="relative mb-4">
+                <div class="absolute inset-0 bg-yellow-500 rounded-full blur-2xl opacity-10 animate-pulse"></div>
+                <i class="fas fa-bolt text-5xl text-yellow-400 relative z-10 icon-3d" style="animation: pulseGlow 2s infinite ease-in-out;"></i>
+            </div>
+            
+            <h1 class="text-2xl font-bold text-white tracking-tight mt-2" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.9);">
+                Web Page 4.1 Ultra
+            </h1>
+            <p class="text-gray-500 text-[10px] tracking-[0.4em] mt-2 mb-6 uppercase">Inicializando</p>
+            
+            <div class="loading-bar"></div>
+        </div>
+    </div>
+
+    <div id="app-container" class="relative min-h-screen opacity-0 transition-opacity duration-1000">
+        
+        <div id="main-screen" class="screen-container screen-visible pb-10">
+            
+            <header class="header-3d pt-8 pb-10 px-6 rounded-b-[2rem] relative z-20">
+                <div class="flex justify-between items-center max-w-lg mx-auto animate-enter delay-cascade" style="animation-delay: 0.1s;">
+                    <div>
+                        <p class="text-yellow-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1 drop-shadow-md">Painel Operacional</p>
+                        <h1 class="text-3xl font-bold text-white tracking-tight" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.9);">Web Page 4.1 Ultra</h1>
+                    </div>
+                    <div class="w-12 h-12 btn-circle-3d flex items-center justify-center">
+                        <i class="fas fa-bolt text-yellow-400 icon-3d"></i>
+                    </div>
+                </div>
+            </header>
+
+            <main class="max-w-lg mx-auto px-4 -mt-5 space-y-5 relative z-30">
+
+                <a href="https://tarcizopalhares39-gif.github.io/E-bike/" class="block animate-enter delay-cascade" style="animation-delay: 0.3s;">
+                    <div class="card-3d luminous-edge-blue p-6 overflow-hidden">
+                        <div class="absolute right-0 top-0 w-32 h-32 bg-blue-600 rounded-full blur-[70px] opacity-15 pointer-events-none"></div>
+                        <div class="flex items-center justify-between relative z-10">
+                            <div>
+                                <span class="text-blue-400 text-[10px] font-bold bg-blue-900/30 border border-blue-900/50 px-2 py-1 rounded uppercase shadow-inner">Principal</span>
+                                <h2 class="text-xl font-bold text-white mt-3" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">E-Bike 4.1 Ultra</h2>
+                                <p class="text-gray-500 text-sm mt-1">Monitoramento de Bateria</p>
+                            </div>
+                            <div class="w-14 h-14 btn-icon-3d flex items-center justify-center text-blue-400">
+                                <i class="fas fa-bicycle text-2xl icon-3d"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <a href="https://script.google.com/macros/s/AKfycbzEEDjxHySNEvofoVm62YvZfu6qB4NFCCvbYo0RMYB_hnyHoe4EiuJnBVpdYjy3w1BiMw/exec" class="block animate-enter delay-cascade" style="animation-delay: 0.5s;">
+                        <div class="card-3d luminous-edge-yellow p-5 h-full flex flex-col items-center text-center justify-center">
+                            <div class="w-12 h-12 btn-icon-3d flex items-center justify-center text-yellow-500 mb-4">
+                                <i class="fas fa-search-location text-xl icon-3d"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-100 text-sm tracking-wide">CEP VIRTUAL 4.1</h3>
+                            <p class="text-xs text-gray-500 mt-1">Ruas de Viçosa</p>
+                        </div>
+                    </a>
+
+                    <a href="https://script.google.com/macros/s/AKfycbySiFNOlXzHGExtUgGWZrrNNQ79iBlJh1iP6tnr82NjqIaWYC92KKKr_bxxAgrjQPdPIQ/exec" class="block animate-enter delay-cascade" style="animation-delay: 0.6s;">
+                        <div class="card-3d luminous-edge-green p-5 h-full flex flex-col items-center text-center justify-center">
+                            <div class="w-12 h-12 btn-icon-3d flex items-center justify-center text-green-500 mb-4">
+                                <i class="fas fa-map text-xl icon-3d"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-100 text-sm tracking-wide">DISTRITOS 4.1</h3>
+                            <p class="text-xs text-gray-500 mt-1">Triagem</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="animate-enter delay-cascade" style="animation-delay: 0.8s;">
+                    <button onclick="toggleScreens('main', 'links')" class="w-full card-3d luminous-edge-gray p-5 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 btn-icon-3d flex items-center justify-center text-gray-400 mr-4">
+                                <i class="fas fa-link text-lg icon-3d"></i>
+                            </div>
+                            <div class="text-left">
+                                <h3 class="font-bold text-gray-200 text-lg">Links Úteis</h3>
+                                <p class="text-sm text-gray-600">SRO, RH, Sistemas...</p>
+                            </div>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-black shadow-[inset_2px_2px_5px_rgba(0,0,0,0.9)] flex items-center justify-center border border-gray-900">
+                            <i class="fas fa-chevron-right text-gray-600 text-sm icon-3d"></i>
+                        </div>
+                    </button>
+                </div>
+
+            </main>
+            
+            <footer class="text-center mt-10 text-[10px] text-gray-700 uppercase tracking-widest animate-enter delay-cascade" style="animation-delay: 1s;">
+                Correios • CDD Viçosa
+            </footer>
+        </div>
+
+        <div id="links-screen" class="screen-container screen-hidden pb-10">
+            
+            <div class="header-3d p-6 sticky top-0 z-40 flex items-center rounded-b-3xl mb-8">
+                <button onclick="toggleScreens('links', 'main')" class="w-12 h-12 btn-circle-3d flex items-center justify-center text-gray-400 mr-4">
+                    <i class="fas fa-arrow-left icon-3d"></i>
+                </button>
+                <h2 class="text-xl font-bold text-white" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.9);">Todos os Links</h2>
+            </div>
+
+            <div class="max-w-lg mx-auto p-4 space-y-4">
+                
+                <a href="https://tarcizopalhares39-gif.github.io/SRO/" target="_blank" class="flex items-center p-4 card-3d luminous-edge-blue animate-enter" style="animation-delay: 0.1s;">
+                    <div class="w-10 h-10 btn-icon-3d flex items-center justify-center mr-4">
+                        <i class="fas fa-cube text-blue-500 text-lg icon-3d"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-200 text-base">SRO 4.1 Ultra</h4>
+                        <p class="text-xs text-gray-500">Consulta de objetos</p>
+                    </div>
+                    <div class="text-gray-600"><i class="fas fa-external-link-alt text-xs icon-3d"></i></div>
+                </a>
+
+                <a href="https://correios.com.br" target="_blank" class="flex items-center p-4 card-3d luminous-edge-yellow animate-enter" style="animation-delay: 0.2s;">
+                    <div class="w-10 h-10 btn-icon-3d flex items-center justify-center mr-4">
+                        <i class="fas fa-globe text-yellow-500 text-lg icon-3d"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-200 text-base">Portal Correios</h4>
+                        <p class="text-xs text-gray-500">Site oficial</p>
+                    </div>
+                </a>
+
+                <a href="https://srp.correios.com.br/registrodeponto/l" class="flex items-center p-4 card-3d luminous-edge-purple animate-enter" style="animation-delay: 0.3s;">
+                    <div class="w-10 h-10 btn-icon-3d flex items-center justify-center mr-4">
+                        <i class="fas fa-users text-purple-500 text-lg icon-3d"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-200 text-base">SRP</h4>
+                        <p class="text-xs text-gray-500">Registro de Ponto</p>
+                    </div>
+                </a>
+
+                <a href="https://tarcizopalhares39-gif.github.io/Ticket-calcutator/" target="_blank" class="flex items-center p-4 card-3d luminous-edge-green animate-enter" style="animation-delay: 0.4s;">
+                    <div class="w-10 h-10 btn-icon-3d flex items-center justify-center mr-4">
+                        <i class="fas fa-chart-line text-green-500 text-lg icon-3d"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-200 text-base">Ticket Projeção 4.1 Ultra</h4>
+                        <p class="text-xs text-gray-500">Consulta pessoal</p>
+                    </div>
+                    <div class="text-gray-600"><i class="fas fa-external-link-alt text-xs icon-3d"></i></div>
+                </a>
+
+                <a href="#" class="flex items-center p-4 card-3d luminous-edge-red animate-enter" style="animation-delay: 0.5s;">
+                    <div class="w-10 h-10 btn-icon-3d flex items-center justify-center mr-4">
+                        <i class="fas fa-envelope text-red-500 text-lg icon-3d"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-200 text-base">Webmail</h4>
+                        <p class="text-xs text-gray-500">Email corporativo</p>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lógica de Entrada Melhorada (Splash Screen -> Cascata)
+        window.addEventListener('load', () => {
+            const splash = document.getElementById('splash-screen');
+            const splashCard = document.getElementById('splash-card');
+            const appContainer = document.getElementById('app-container');
+            const animatedElements = document.querySelectorAll('.delay-cascade');
+            
+            // 1. Pausa as animações em cascata da tela principal enquanto o splash carrega
+            animatedElements.forEach(el => {
+                el.style.animationPlayState = 'paused';
+            });
+
+            setTimeout(() => {
+                // 2. O card flutuante some suavemente
+                if (splashCard) {
+                    splashCard.style.transition = 'all 1s ease-in-out';
+                    splashCard.style.opacity = '0';
+                    splashCard.style.transform = 'scale(0.8) translateY(-20px)';
+                }
+                splash.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // 3. Remove a tela de splash
+                    splash.style.visibility = 'hidden';
+                    appContainer.classList.remove('opacity-0');
+                    
+                    // 4. Inicia a cascata dos cards subindo logo em seguida
+                    animatedElements.forEach(el => {
+                        el.style.animationPlayState = 'running';
+                    });
+                }, 1000); 
+            }, 2500); 
+        });
+
+        // Lógica de Transição de Telas com Animação
+        function toggleScreens(fromId, toId) {
+            const screenFrom = document.getElementById(`${fromId}-screen`);
+            const screenTo = document.getElementById(`${toId}-screen`);
+
+            // 1. Esconde a tela atual
+            screenFrom.classList.remove('screen-visible');
+            screenFrom.classList.add('screen-hidden');
+
+            // 2. Aguarda a transição e exibe a próxima
+            setTimeout(() => {
+                window.scrollTo(0,0);
+                
+                const animatedElements = screenTo.querySelectorAll('.animate-enter');
+                animatedElements.forEach(el => {
+                    el.style.animation = 'none';
+                    el.offsetHeight; 
+                    el.style.animation = null; 
+                });
+
+                screenTo.classList.remove('screen-hidden');
+                screenTo.classList.add('screen-visible');
+            }, 300); 
+        }
+
+        // --- SISTEMA AVANÇADO DE FEEDBACK TÁTIL E SONORO ---
+        
+        // Inicializa o contexto de áudio nativo para criar o som mecanizado
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playMechanicalClick() {
+            // 1. Vibração de Clique Físico: Pulso curto e seco de 10ms
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+
+            // 2. Som de Clique Interativo: Sintetiza um som de "Tick" rápido e moderno
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume(); 
+            }
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            // Configuração para um som muito agudo, rápido e seco (estilo "clique" mecânico)
+            oscillator.type = 'triangle'; // Onda triangular soa mais "sólida" para cliques
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Começa alto
+            oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.03); // Cai em 30ms
+
+            // Volume bem discreto
+            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.03);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.03); // O som morre em exatos 30 milissegundos
+        }
+
+        // 3. Gatilhos (Triggers)
+        
+        // A) Eventos de Toque: Para botões, links e cards
+        document.querySelectorAll('a, button, .card-3d, .btn-circle-3d').forEach(el => {
+            el.addEventListener('pointerdown', playMechanicalClick);
+        });
+
+        // B) Eventos de Teclado: Para toda vez que o usuário digitar algo em qualquer campo de texto
+        document.addEventListener('keydown', function(event) {
+            const target = event.target;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                playMechanicalClick();
+            }
+        });
+    </script>
+</body>
+</html>
+
+
